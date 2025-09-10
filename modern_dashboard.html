@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge-IIoTset Dataset Analysis - Modern Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #16213e;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 1px solid #2a2a3e;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid #2a2a3e;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header h2 {
+            color: #ffffff;
+            font-size: 1.5em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: #b0b0b0;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border-left-color: #00d4ff;
+        }
+        
+        .nav-item i {
+            font-size: 1.2em;
+            width: 20px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 30px;
+            background: #1a1a2e;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #b0b0b0;
+            font-size: 1.1em;
+        }
+        
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: #16213e;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #2a2a3e;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-color: #00d4ff;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #00d4ff;
+            margin: 15px 0;
+        }
+        
+        .metric-label {
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-valid {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+        
+        .status-invalid {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+            border: 1px solid #ff0000;
+        }
+        
+        .status-pending {
+            background: rgba(255, 255, 0, 0.2);
+            color: #ffff00;
+            border: 1px solid #ffff00;
+        }
+        
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #2a2a3e;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-green { background: #00ff00; }
+        .progress-yellow { background: #ffff00; }
+        .progress-red { background: #ff0000; }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .btn-validate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-generate {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        }
+        
+        .btn-campaign {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+        }
+        
+        .btn-reports {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a3e;
+        }
+        
+        .data-table th {
+            color: #b0b0b0;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        .data-table td {
+            color: #ffffff;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main-content {
+                margin-left: 200px;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>🔒 Edge-IIoTset Analysis</h2>
+        </div>
+        
+        <nav>
+            <a href="#" class="nav-item active">
+                <span>📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>✅</span>
+                <span>Data Validation</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>🤖</span>
+                <span>AI Analysis</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>📈</span>
+                <span>Security Reports</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>📊</span>
+                <span>Insights</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>🧪</span>
+                <span>Testing</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>🛡️</span>
+                <span>Security Guard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>🔍</span>
+                <span>Intelligence Hub</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>⚙️</span>
+                <span>Settings</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>👤</span>
+                <span>Admin</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span>🚪</span>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Edge-IIoTset Dataset Analysis</h1>
+            <p>Comprehensive Statistical Dashboard for IoT Cybersecurity Research</p>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>📊</span>
+                        <span>Total Records</span>
+                    </div>
+                </div>
+                <div class="metric-value">157,800</div>
+                <div class="metric-label">Data Points</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🔧</span>
+                        <span>Features</span>
+                    </div>
+                </div>
+                <div class="metric-value">63</div>
+                <div class="metric-label">Attributes</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>⚔️</span>
+                        <span>Attack Types</span>
+                    </div>
+                </div>
+                <div class="metric-value">15</div>
+                <div class="metric-label">Security Threats</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>✅</span>
+                        <span>Data Quality</span>
+                    </div>
+                </div>
+                <div class="metric-value">100%</div>
+                <div class="metric-label">Complete</div>
+            </div>
+        </div>
+        
+        <!-- Charts Grid -->
+        <div class="cards-grid">
+            <!-- Attack Distribution Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>📊</span>
+                        <span>Security Threat Distribution</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="attackChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Traffic Status Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🥧</span>
+                        <span>Traffic Status Distribution</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Row -->
+        <div class="cards-grid">
+            <!-- Recent Analysis Table -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🕒</span>
+                        <span>Recent Analysis</span>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Attack Type</th>
+                            <th>Status</th>
+                            <th>Confidence</th>
+                            <th>Records</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Normal</td>
+                            <td><span class="status-badge status-valid">Safe</span></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-green" style="width: 95%"></div>
+                                </div>
+                                95%
+                            </td>
+                            <td>24,301</td>
+                        </tr>
+                        <tr>
+                            <td>DDoS_UDP</td>
+                            <td><span class="status-badge status-invalid">Threat</span></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-red" style="width: 88%"></div>
+                                </div>
+                                88%
+                            </td>
+                            <td>14,498</td>
+                        </tr>
+                        <tr>
+                            <td>DDoS_ICMP</td>
+                            <td><span class="status-badge status-invalid">Threat</span></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-red" style="width: 85%"></div>
+                                </div>
+                                85%
+                            </td>
+                            <td>14,090</td>
+                        </tr>
+                        <tr>
+                            <td>Ransomware</td>
+                            <td><span class="status-badge status-invalid">Threat</span></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-red" style="width: 92%"></div>
+                                </div>
+                                92%
+                            </td>
+                            <td>10,925</td>
+                        </tr>
+                        <tr>
+                            <td>SQL_injection</td>
+                            <td><span class="status-badge status-invalid">Threat</span></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-yellow" style="width: 78%"></div>
+                                </div>
+                                78%
+                            </td>
+                            <td>10,311</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>⚡</span>
+                        <span>Quick Actions</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <a href="#" class="action-btn btn-validate">
+                        <span>✅</span>
+                        <span>Validate Data</span>
+                    </a>
+                    <a href="#" class="action-btn btn-generate">
+                        <span>🤖</span>
+                        <span>Generate Report</span>
+                    </a>
+                    <a href="#" class="action-btn btn-campaign">
+                        <span>📈</span>
+                        <span>Security Analysis</span>
+                    </a>
+                    <a href="#" class="action-btn btn-reports">
+                        <span>📊</span>
+                        <span>View Reports</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Charts -->
+        <div class="cards-grid">
+            <!-- Threat Categories -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>📈</span>
+                        <span>Threat Categories</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Data Quality -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>📊</span>
+                        <span>Data Quality Metrics</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="qualityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Chart.js configuration for dark theme
+        Chart.defaults.color = '#ffffff';
+        Chart.defaults.borderColor = '#2a2a3e';
+        Chart.defaults.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        
+        // Attack Distribution Chart
+        const attackCtx = document.getElementById('attackChart').getContext('2d');
+        const attackData = ['Normal', 'DDoS_UDP', 'DDoS_ICMP', 'Ransomware', 'DDoS_HTTP', 'SQL_injection', 'Uploading', 'DDoS_TCP', 'Backdoor', 'Vulnerability_scanner', 'Port_Scanning', 'XSS', 'Password', 'MITM', 'Fingerprinting'];
+        const attackCounts = [24301, 14498, 14090, 10925, 10561, 10311, 10269, 10247, 10195, 10076, 10071, 10052, 9989, 1214, 1001];
+        
+        new Chart(attackCtx, {
+            type: 'doughnut',
+            data: {
+                labels: attackData,
+                datasets: [{
+                    data: attackCounts,
+                    backgroundColor: [
+                        '#00d4ff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
+                        '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3',
+                        '#ff9f43', '#10ac84', '#ee5a24', '#0984e3', '#6c5ce7'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#16213e'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: {
+                                size: 10,
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#00d4ff',
+                        borderWidth: 1,
+                        titleFont: {
+                            size: 14,
+                            color: '#ffffff'
+                        },
+                        bodyFont: {
+                            size: 12,
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Traffic Status Chart
+        const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+        new Chart(trafficCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Safe Traffic', 'Dangerous Traffic'],
+                datasets: [{
+                    data: [15.4, 84.6],
+                    backgroundColor: ['#4ecdc4', '#ff6b6b'],
+                    borderWidth: 2,
+                    borderColor: '#16213e'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: {
+                                size: 12,
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#00d4ff',
+                        borderWidth: 1,
+                        titleFont: {
+                            size: 14,
+                            color: '#ffffff'
+                        },
+                        bodyFont: {
+                            size: 12,
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categories = ['DDoS Attacks', 'Web Attacks', 'Network Attacks', 'Malware', 'Reconnaissance'];
+        const categoryCounts = [38835, 30352, 12286, 21120, 10076];
+        
+        new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: categories,
+                datasets: [{
+                    label: 'Records',
+                    data: categoryCounts,
+                    backgroundColor: [
+                        'rgba(0, 212, 255, 0.8)',
+                        'rgba(255, 107, 107, 0.8)',
+                        'rgba(78, 205, 196, 0.8)',
+                        'rgba(255, 159, 67, 0.8)',
+                        'rgba(150, 206, 180, 0.8)'
+                    ],
+                    borderColor: [
+                        '#00d4ff',
+                        '#ff6b6b',
+                        '#4ecdc4',
+                        '#ff9f43',
+                        '#96ceb4'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#00d4ff',
+                        borderWidth: 1,
+                        titleFont: {
+                            size: 14,
+                            color: '#ffffff'
+                        },
+                        bodyFont: {
+                            size: 12,
+                            color: '#ffffff'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#ffffff',
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#ffffff',
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Quality Chart
+        const qualityCtx = document.getElementById('qualityChart').getContext('2d');
+        const qualityMetrics = ['Complete', 'Missing', 'Duplicates', 'Unique'];
+        const qualityCounts = [157800, 0, 814, 156986];
+        
+        new Chart(qualityCtx, {
+            type: 'bar',
+            data: {
+                labels: qualityMetrics,
+                datasets: [{
+                    label: 'Count',
+                    data: qualityCounts,
+                    backgroundColor: [
+                        'rgba(0, 212, 255, 0.8)',
+                        'rgba(255, 107, 107, 0.8)',
+                        'rgba(255, 159, 67, 0.8)',
+                        'rgba(78, 205, 196, 0.8)'
+                    ],
+                    borderColor: [
+                        '#00d4ff',
+                        '#ff6b6b',
+                        '#ff9f43',
+                        '#4ecdc4'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#00d4ff',
+                        borderWidth: 1,
+                        titleFont: {
+                            size: 14,
+                            color: '#ffffff'
+                        },
+                        bodyFont: {
+                            size: 12,
+                            color: '#ffffff'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#ffffff',
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#ffffff',
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
