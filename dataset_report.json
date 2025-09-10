@@ -1,0 +1,65 @@
+{
+  "dataset_info": {
+    "name": "Edge-IIoTset Cybersecurity Dataset",
+    "creator": "Dr. Mohamed Amine Ferrag et al.",
+    "purpose": "IoT/IIoT Intrusion Detection Research",
+    "total_records": 157800,
+    "total_features": 63,
+    "memory_usage_mb": 221.45
+  },
+  "data_quality": {
+    "completeness_percentage": 100.0,
+    "missing_values": 0,
+    "duplicate_rows": 814,
+    "data_integrity_score": 99.48
+  },
+  "attack_analysis": {
+    "total_attack_types": 15,
+    "attack_distribution": {
+      "Normal": 24301,
+      "DDoS_UDP": 14498,
+      "DDoS_ICMP": 14090,
+      "Ransomware": 10925,
+      "DDoS_HTTP": 10561,
+      "SQL_injection": 10311,
+      "Uploading": 10269,
+      "DDoS_TCP": 10247,
+      "Backdoor": 10195,
+      "Vulnerability_scanner": 10076,
+      "Port_Scanning": 10071,
+      "XSS": 10052,
+      "Password": 9989,
+      "MITM": 1214,
+      "Fingerprinting": 1001
+    },
+    "most_common_attack": "Normal",
+    "least_common_attack": "Fingerprinting",
+    "attack_percentage": 84.6,
+    "normal_percentage": 15.4,
+    "class_imbalance_ratio": 5.49
+  },
+  "business_insights": {
+    "dataset_readiness": "Production Ready",
+    "preprocessing_needed": "Minimal",
+    "recommended_use_cases": [
+      "Intrusion Detection Systems",
+      "Anomaly Detection",
+      "Federated Learning",
+      "Network Security Research",
+      "IoT Behavior Analysis"
+    ],
+    "technical_recommendations": [
+      "Handle class imbalance with SMOTE or class weights",
+      "Remove duplicate records for optimal performance",
+      "Use stratified sampling for train/test splits",
+      "Consider feature selection from 63 features",
+      "Implement proper validation strategies"
+    ]
+  },
+  "statistical_summary": {
+    "mean_records_per_attack": 10520,
+    "data_density": 712.58,
+    "feature_to_record_ratio": 0.3992,
+    "attack_coverage_score": 100.0
+  }
+}
